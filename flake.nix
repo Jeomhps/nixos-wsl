@@ -23,16 +23,7 @@
         modules = [
           { nix.registry.nixpkgs.flake = nixpkgs; }
           nvf.nixosModules.default
-          (
-            { config, lib, ... }:
-            {
-              imports = [ ./configuration.nix ];
-              options.secrets = lib.mkOption {
-                default = import ./secrets.nix { inherit lib; };
-                type = lib.types.attrs;
-              };
-            }
-          )
+          ./configuration.nix
           NixOS-WSL.nixosModules.wsl
         ];
       };

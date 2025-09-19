@@ -14,9 +14,6 @@
     "nix-command"
     "flakes"
   ];
-  #  security.pki.certificateFiles = [
-  #    secrets.certPath
-  #  ];
 
   programs.nvf = {
     enable = true;
@@ -70,7 +67,7 @@
     pkgs.neofetch
   ];
   wsl.enable = true;
-  wsl.defaultUser = config.secrets.username;
+  wsl.defaultUser = "jeomhps";
   programs.zsh = {
     enable = true;
     enableCompletion = true;
@@ -98,7 +95,7 @@
     };
   };
 
-  users.users.${config.secrets.username}.extraGroups = [ "docker" ];
+  users.users.jeomhps.extraGroups = [ "docker" ];
 
   # This value determines the NixOS release from which the default
   # settings for stateful data, like file locations and database versions
