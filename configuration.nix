@@ -45,7 +45,7 @@
         enable = true;
         name = "catppuccin";
         style = "mocha";
-        transparent = true;
+        #transparent = true;
       };
     };
   };
