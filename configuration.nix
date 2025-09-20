@@ -17,11 +17,35 @@
 
   programs.nvf = {
     enable = true;
-    settings = {
+    settings.vim = {
+
+      enableLuaLoader = true;
+
       #vim.viAlias = false;
       #vim.vimAlias = true;
-      vim.languages = {
-        nix.enable = true;
+
+      spellcheck = {
+        enable = true;
+        languages = [
+          "en"
+          "fr"
+        ];
+      };
+
+      languages = {
+        nix = {
+          enable = true;
+          extraDiagnostics.enable = true;
+          treesitter.enable = true;
+          format.type = "alejandra";
+          lsp = {
+            server = "nixd";
+            package = pkgs.nixd;
+          };
+        };
+        csharp.enable = true;
+        yaml.enable = true;
+
         markdown.enable = true;
         bash.enable = true;
         clang.enable = true;
@@ -37,18 +61,75 @@
         python.enable = true;
         typst.enable = true;
       };
-      vim.lsp = {
+
+      visuals = {
+        nvim-scrollbar.enable = false;
+        nvim-web-devicons.enable = true;
+        nvim-cursorline.enable = true;
+        cinnamon-nvim.enable = true;
+
+        highlight-undo.enable = true;
+        indent-blankline.enable = true;
+      };
+
+      statusline = {
+        lualine = {
+          enable = true;
+          theme = "catppuccin";
+        };
+      };
+
+      options.termguicolors = true;
+
+      lsp = {
         enable = true;
         formatOnSave = true;
+        otter-nvim.enable = true;
       };
-      vim.theme = {
+
+      diagnostics.config = {
+        underline.enable = true;
+        virtual_lines.enable = false;
+      };
+
+      telescope.enable = true;
+      telescope.setupOpts.pickers.colorscheme.enable_preview = true;
+
+      git = {
+        enable = true;
+        gitsigns.enable = true;
+        gitsigns.codeActions.enable = false;
+      };
+
+      autocomplete.nvim-cmp.enable = true;
+
+      theme = {
         enable = true;
         name = "catppuccin";
         style = "mocha";
         #transparent = true;
       };
+
+      filetree = {
+        neo-tree = {
+          enable = true;
+        };
+      };
+
+      tabline = {
+        nvimBufferline.enable = true;
+      };
+
+      terminal = {
+        toggleterm = {
+          enable = true;
+          lazygit.enable = true;
+        };
+      };
+
     };
   };
+
   environment.systemPackages = [
     pkgs.helix
     pkgs.vim
@@ -65,9 +146,13 @@
     pkgs.dive
     pkgs.bind
     pkgs.neofetch
+    pkgs.neovim
   ];
+
   wsl.enable = true;
+
   wsl.defaultUser = "jeomhps";
+
   programs.zsh = {
     enable = true;
     enableCompletion = true;
@@ -79,7 +164,9 @@
       "HIST_IGNORE_ALL_DUPS"
     ];
   };
+
   users.defaultUserShell = pkgs.zsh;
+
   virtualisation.docker = {
     enable = true;
     # Set up resource limits
