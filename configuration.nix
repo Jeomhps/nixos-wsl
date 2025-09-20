@@ -77,6 +77,7 @@
       autopairs.nvim-autopairs.enable = true;
       binds.cheatsheet.enable = true;
       binds.whichKey.enable = true;
+      binds.whichKey.setupOpts.preset = "classic";
       comments.comment-nvim.enable = true;
 
       # dashboard.startify = {
@@ -167,8 +168,6 @@
   };
 
   environment.systemPackages = [
-    pkgs.helix
-    pkgs.vim
     pkgs.zellij
     pkgs.bat
     pkgs.chezmoi
@@ -182,7 +181,6 @@
     pkgs.dive
     pkgs.bind
     pkgs.neofetch
-    pkgs.neovim
     pkgs.go
     pkgs.gcc
   ];
