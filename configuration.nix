@@ -76,15 +76,19 @@
       autocomplete.blink-cmp.enable = true;
       autopairs.nvim-autopairs.enable = true;
       binds.cheatsheet.enable = true;
+      binds.whichKey.enable = true;
       comments.comment-nvim.enable = true;
 
-      dashboard.startify = {
-        enable = true;
-        changeToVCRoot = true; # go to git root on run
-      };
+      # dashboard.startify = {
+      #   enable = true;
+      #   changeToVCRoot = true; # go to git root on run
+      # };
+
+      dashboard.alpha.enable = true;
 
       visuals = {
         nvim-scrollbar.enable = false;
+        fidget-nvim.enable = true;
         nvim-web-devicons.enable = true;
         nvim-cursorline.enable = true;
         cinnamon-nvim.enable = true;
@@ -115,6 +119,8 @@
         virtual_lines.enable = false;
       };
 
+      diagnostics.nvim-lint.enable = true;
+
       telescope.enable = true;
       telescope.setupOpts.pickers.colorscheme.enable_preview = true;
 
@@ -125,6 +131,7 @@
       };
 
       #autocomplete.nvim-cmp.enable = true;
+      #autocomplete.nvim-cmp.sourcePlugins.cheatseet-nvim.enable = true;
 
       theme = {
         enable = true;
