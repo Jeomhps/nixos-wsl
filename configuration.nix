@@ -16,6 +16,7 @@
 
   programs.nvf = {
     enable = true;
+
     settings.vim = {
       enableLuaLoader = true;
 
@@ -123,13 +124,20 @@
         gitsigns.codeActions.enable = false;
       };
 
-      autocomplete.nvim-cmp.enable = true;
+      #autocomplete.nvim-cmp.enable = true;
 
       theme = {
         enable = true;
         name = "catppuccin";
         style = "mocha";
         #transparent = true;
+      };
+
+      options = rec {
+        cursorlineopt = "both";
+        shiftwidth = 2;
+        tabstop = 2;
+        softtabstop = 2;
       };
 
       filetree = {
@@ -168,6 +176,8 @@
     pkgs.bind
     pkgs.neofetch
     pkgs.neovim
+    pkgs.go
+    pkgs.gcc
   ];
 
   wsl.enable = true;
