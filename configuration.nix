@@ -8,8 +8,7 @@
   lib,
   pkgs,
   ...
-}:
-{
+}: {
   nix.settings.experimental-features = [
     "nix-command"
     "flakes"
@@ -18,7 +17,6 @@
   programs.nvf = {
     enable = true;
     settings.vim = {
-
       enableLuaLoader = true;
 
       #vim.viAlias = false;
@@ -33,6 +31,19 @@
       };
 
       languages = {
+        enableDAP = false;
+        enableExtraDiagnostics = true;
+        enableFormat = true;
+        enableTreesitter = true;
+
+        typst = {
+          enable = true;
+          # NOTE: bugged in devshells using other archs
+          extensions.typst-preview-nvim.enable = true;
+          format.type = "typstyle";
+          treesitter.enable = true;
+        };
+
         nix = {
           enable = true;
           extraDiagnostics.enable = true;
@@ -59,7 +70,16 @@
         lua.enable = true;
         #zig.enable = true;
         python.enable = true;
-        typst.enable = true;
+      };
+
+      autocomplete.blink-cmp.enable = true;
+      autopairs.nvim-autopairs.enable = true;
+      binds.cheatsheet.enable = true;
+      comments.comment-nvim.enable = true;
+
+      dashboard.startify = {
+        enable = true;
+        changeToVCRoot = true; # go to git root on run
       };
 
       visuals = {
@@ -84,7 +104,9 @@
       lsp = {
         enable = true;
         formatOnSave = true;
-        otter-nvim.enable = true;
+        #otter-nvim.enable = true;
+        lspkind.enable = true;
+        trouble.enable = true;
       };
 
       diagnostics.config = {
@@ -126,7 +148,6 @@
           lazygit.enable = true;
         };
       };
-
     };
   };
 
@@ -182,7 +203,7 @@
     };
   };
 
-  users.users.jeomhps.extraGroups = [ "docker" ];
+  users.users.jeomhps.extraGroups = ["docker"];
 
   # This value determines the NixOS release from which the default
   # settings for stateful data, like file locations and database versions
