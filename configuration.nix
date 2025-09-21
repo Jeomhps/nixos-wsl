@@ -11,7 +11,8 @@
   wsl = {
     enable = true;
     defaultUser = "jeomhps";
- 
+  };
+
   environment.systemPackages = [
     # My nvim flake import
     inputs.my-nvim.packages.${pkgs.system}.default
