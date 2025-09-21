@@ -8,6 +8,10 @@
     "flakes"
   ];
 
+  wsl = {
+    enable = true;
+    defaultUser = "jeomhps";
+ 
   environment.systemPackages = [
     # My nvim flake import
     inputs.my-nvim.packages.${pkgs.system}.default
@@ -28,11 +32,6 @@
     pkgs.go
     pkgs.gcc
   ];
-
-  wsl = {
-    enable = true;
-    defaultUser = "jeomhps";
-  };
 
   # Shell
   programs.zsh = {
