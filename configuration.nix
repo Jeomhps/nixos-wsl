@@ -32,6 +32,20 @@
     pkgs.neofetch
     pkgs.go
     pkgs.gcc
+    pkgs.gopass
+    pkgs.nnn
+    pkgs.fzf
+    pkgs.just
+    pkgs.proxychains-ng
+    pkgs.btop
+    pkgs.glances
+    pkgs.wslu
+    pkgs.ripgrep
+    pkgs.delta
+    pkgs.navi
+    pkgs.tokei
+    pkgs.hyperfine
+    pkgs.httpie
   ];
 
   # Shell
