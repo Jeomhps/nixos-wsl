@@ -46,6 +46,9 @@
     pkgs.tokei
     pkgs.hyperfine
     pkgs.httpie
+    pkgs.nmap
+    pkgs.ansible
+    pkgs.netcat
   ];
 
   # Shell
