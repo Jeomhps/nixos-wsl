@@ -49,6 +49,8 @@
     pkgs.nmap
     pkgs.ansible
     pkgs.netcat
+    pkgs.tree
+    pkgs.fosrl-newt
   ];
 
   # Shell
@@ -79,6 +81,8 @@
       ];
     };
   };
+
+  networking.firewall.enable = false;
 
   users.users.jeomhps.extraGroups = ["docker"];
 
