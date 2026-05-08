@@ -80,6 +80,24 @@ git config --global user.email "170039650+Jeomhps@users.noreply.github.com"
 
 After that everything should be good.
 
+### 7. Install win32yank on the Windows host (fast clipboard)
+
+Neovim reads the clipboard through a `wsl-paste` helper. Without this step it
+falls back to `powershell.exe Get-Clipboard`, which adds ~300–700 ms of
+startup overhead on every paste.
+
+From a PowerShell window on the Windows host:
+
+```powershell
+# via Scoop
+scoop install win32yank
+
+# or via WinGet
+winget install equalsraf.win32yank
+```
+
+`wsl-paste` detects `win32yank.exe` automatically — no `nixos-rebuild` needed.
+
 ---
 
 ## Options (`wslBase`)
