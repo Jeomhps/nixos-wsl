@@ -22,7 +22,6 @@
     ncdu
     ouch
     tree
-    xclip
 
     # git
     git
