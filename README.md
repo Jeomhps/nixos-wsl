@@ -108,6 +108,11 @@ The `nixosModules.default` export is the main building block. A downstream flake
     nixos-wsl = {
       url = "github:jeomhps/nixos-wsl";
       inputs.nixpkgs.follows = "nixpkgs";
+      inputs.neovim-config.follows = "neovim-config"; # see note below
+    };
+    neovim-config = {
+      url = "github:jeomhps/neovim";
+      inputs.nixpkgs.follows = "nixpkgs";
     };
   };
 
@@ -128,6 +133,18 @@ The `nixosModules.default` export is the main building block. A downstream flake
   };
 }
 ```
+
+> **`neovim-config` follows** — `nixos-wsl` pins its own `neovim-config` in its `flake.lock`.
+> By re-declaring it as a direct input and adding `inputs.neovim-config.follows = "neovim-config"`,
+> your downstream flake takes ownership of that pin and you can update neovim independently
+> without waiting for `nixos-wsl` to update first:
+>
+> ```sh
+> nix flake update neovim-config   # update only neovim, nothing else
+> sudo nixos-rebuild switch --flake .
+> ```
+>
+> Without this, you would need to update `nixos-wsl`'s lock first, then update your flake — a two-step chain.
 
 ### Corporate CA / proxy (`your-overrides.nix`)
 
