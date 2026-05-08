@@ -7,6 +7,10 @@
       description = "Primary WSL user. Downstream flakes can override this.";
     };
 
+    neovim = {
+      enable = lib.mkEnableOption "neovim config from jeomhps/neovim" // { default = true; };
+    };
+
     dotfiles = {
       enable = lib.mkEnableOption "auto-apply chezmoi dotfiles on first boot" // { default = true; };
       repo = lib.mkOption {
@@ -19,6 +23,8 @@
 
   config = lib.mkMerge [
     {
+      wrappers.neovim.enable = config.wslBase.neovim.enable;
+
       nix.settings = {
         experimental-features = [ "nix-command" "flakes" ];
       };

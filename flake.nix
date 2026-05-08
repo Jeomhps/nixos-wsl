@@ -39,7 +39,7 @@
       nixosConfigurations."nixos" = nixpkgs.lib.nixosSystem {
         system = "x86_64-linux";
         modules = [
-          { nix.registry.nixpkgs.flake = nixpkgs; wrappers.neovim.enable = true; }
+          { nix.registry.nixpkgs.flake = nixpkgs; }
           self.nixosModules.default
         ];
       };
