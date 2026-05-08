@@ -10,28 +10,99 @@ Base NixOS-WSL configuration — public and designed to be composed by downstrea
 | `nixosModules.packages` | Full system package set |
 | `nixosModules.default` | Everything above + [NixOS-WSL](https://github.com/nix-community/NixOS-WSL) + [neovim](https://github.com/jeomhps/neovim) |
 
-## Direct use (personal machine)
+---
 
-```sh
-sudo nixos-rebuild switch --flake github:jeomhps/nixos-wsl#nixos
+## Fresh setup (personal machine)
+
+### 1. Import the NixOS-WSL tarball
+
+Download the latest release tarball from [nix-community/NixOS-WSL releases](https://github.com/nix-community/NixOS-WSL/releases), then import it into WSL from PowerShell:
+
+```powershell
+wsl --import NixOS E:\WSL\NixOS D:\Downloads\nixos.wsl
 ```
 
-Or after cloning:
+### 2. Boot into the new distro
 
-```sh
-sudo nixos-rebuild switch --flake .#nixos
+```powershell
+wsl -d NixOS
 ```
 
-## Composing from a downstream flake (work setup)
+### 3. Apply the configuration
 
-The `nixosModules.default` export is the main building block: it bundles NixOS-WSL, the neovim module, and all base configuration. A downstream flake only needs to import it and add its own layer on top.
+> Use `boot` and not `switch` — the config changes the default username from `nixos` to `jeomhps`, and using `switch` can leave the new user misconfigured.
 
-### Example `flake.nix` (work, private repo)
+```sh
+sudo nixos-rebuild boot --flake github:jeomhps/nixos-wsl#nixos
+```
+
+### 4. Apply the new username
+
+Exit the WSL shell, then from PowerShell run these commands in order:
+
+```powershell
+# Stop the distro
+wsl -t NixOS
+
+# Boot into the new generation as root to apply the user change
+wsl -d NixOS --user root exit
+
+# Stop it again
+wsl -t NixOS
+
+# Reopen — you are now logged in as jeomhps
+wsl -d NixOS
+```
+
+> chezmoi dotfiles will initialize automatically on this first boot as the new user.
+
+### 5. Generate an SSH key and add it to GitHub
+
+```sh
+ssh-keygen -t ed25519 -C "170039650+Jeomhps@users.noreply.github.com" -f ~/.ssh/id_ed25519_github
+cat ~/.ssh/id_ed25519_github.pub
+```
+
+Go to [GitHub Settings - SSH keys](https://github.com/settings/keys) and add the key.
+
+### 6. Fix the chezmoi remote
+
+On first boot chezmoi is initialized over HTTPS. Switch the remote to SSH and set up git identity:
+
+```sh
+# Switch remote to SSH
+git -C ~/.local/share/chezmoi remote set-url origin git@github.com:jeomhps/dotfiles.git
+
+# Set git identity (if not already in your dotfiles)
+git config --global user.name "jeomhps"
+git config --global user.email "170039650+Jeomhps@users.noreply.github.com"
+```
+
+After that everything should be good.
+
+---
+
+## Options (`wslBase`)
+
+All options live under the `wslBase` namespace and can be overridden by downstream flakes.
+
+| Option | Type | Default | Description |
+|---|---|---|---|
+| `wslBase.username` | `str` | `"jeomhps"` | Primary WSL user created at boot |
+| `wslBase.neovim.enable` | `bool` | `true` | Enable the [jeomhps/neovim](https://github.com/jeomhps/neovim) config |
+| `wslBase.dotfiles.enable` | `bool` | `true` | Auto-run `chezmoi init --apply` on first boot |
+| `wslBase.dotfiles.repo` | `str` | `"jeomhps/dotfiles"` | GitHub `user/repo` shorthand or full git URL passed to `chezmoi init` |
+
+---
+
+## Composing from a downstream flake (e.g. work setup)
+
+The `nixosModules.default` export is the main building block. A downstream flake only needs to import it and layer its own config on top.
+
+### Minimal `flake.nix`
 
 ```nix
 {
-  description = "Work NixOS-WSL configuration";
-
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     nixos-wsl = {
@@ -40,81 +111,61 @@ The `nixosModules.default` export is the main building block: it bundles NixOS-W
     };
   };
 
-  outputs = { self, nixpkgs, nixos-wsl, ... }: {
+  outputs = { nixpkgs, nixos-wsl, ... }: {
     nixosConfigurations."nixos" = nixpkgs.lib.nixosSystem {
       system = "x86_64-linux";
       modules = [
-        { nix.registry.nixpkgs.flake = nixpkgs; wrappers.neovim.enable = true; }
-        nixos-wsl.nixosModules.default  # full base stack
-        ./work.nix                      # corporate overrides
+        {
+          nix.registry.nixpkgs.flake = nixpkgs;
+          wslBase.username      = "youruser";
+          wslBase.dotfiles.repo = "youruser/dotfiles";
+          # wslBase.neovim.enable = false;  # opt out of the neovim config
+        }
+        nixos-wsl.nixosModules.default
+        ./your-overrides.nix
       ];
     };
   };
 }
 ```
 
-### Example `work.nix` (corporate overrides)
+### Corporate CA / proxy (`your-overrides.nix`)
+
+When behind a proxy that does SSL inspection, use a lean `runCommand` bundle instead of overriding `cacert` (avoids a full mass rebuild):
 
 ```nix
 { pkgs, ... }:
 let
-  # Path to the corporate CA certificate (add yours to the repo, gitignored if needed)
-  corporateCert = ./certs/corporate-ca.crt;
+  caBundle = pkgs.runCommand "corporate-ca-bundle" {} ''
+    cat ${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt \
+        ${./certs/corporate-ca.crt} > $out
+  '';
 in
 {
-  # Inject the corporate CA into nixpkgs cacert so that all nix fetches trust it.
-  # This is required when the corporate proxy does SSL inspection.
-  # NOTE: causes a one-time full system rebuild (~1h) because cacert is a deep
-  # dependency. Worth it — all subsequent builds are fast and correct.
-  nixpkgs.overlays = [
-    (final: prev: {
-      cacert = prev.cacert.overrideAttrs (old: {
-        installPhase = (old.installPhase or "") + ''
-          cat ${corporateCert} >> $out/etc/ssl/certs/ca-bundle.crt
-        '';
-      });
-    })
-  ];
+  nix.settings.ssl-cert-file = "${caBundle}";
 
-  # Point nix (libcurl) at the patched cacert bundle.
-  nix.settings.ssl-cert-file = "${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt";
-
-  # The nix-daemon is a systemd service and does NOT inherit user env vars.
-  # Proxy and cert must be set here explicitly.
   systemd.services.nix-daemon.environment = {
     https_proxy       = "http://proxy.corp.internal:9400";
     http_proxy        = "http://proxy.corp.internal:9400";
-    NIX_SSL_CERT_FILE = "${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt";
+    NIX_SSL_CERT_FILE = "${caBundle}";
   };
 
-  environment.variables = {
-    https_proxy = "http://proxy.corp.internal:9400";
-  };
+  environment.variables.https_proxy = "http://proxy.corp.internal:9400";
 
-  security.pki.certificateFiles = [ corporateCert ];
-
-  # Override the Docker subnet to avoid conflicts with internal IP ranges.
-  virtualisation.docker.daemon.settings.default-address-pools = [
-    {
-      base = "10.200.0.0/16";
-      size = 24;
-    }
-  ];
+  security.pki.certificateFiles = [ ./certs/corporate-ca.crt ];
 }
 ```
 
-### Applying the work configuration
+Place your corporate CA certificate (PEM format) at `certs/corporate-ca.crt` next to your flake.
 
-```sh
-sudo nixos-rebuild switch --flake .#nixos
-```
+---
 
 ## Updating
 
 ```sh
-# Update all inputs in the base flake
+# Update all inputs (run inside the flake directory)
 nix flake update
 
-# In your work flake, update only the base flake
+# From a downstream flake, update only the base
 nix flake lock --update-input nixos-wsl
 ```
