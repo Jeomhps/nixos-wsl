@@ -121,6 +121,20 @@ All options live under the `wslBase` namespace and can be overridden by downstre
 
 The `nixosModules.default` export is the main building block. A downstream flake only needs to import it and layer its own config on top.
 
+### Checklist
+
+Before running `nixos-rebuild` for the first time on the work machine, create `~/.config/chezmoi/chezmoi.toml` **before** chezmoi runs (i.e. before the first boot after the flake switch), so the `chezmoi-init` systemd service picks it up:
+
+```toml
+[data]
+  work_git_username = "yourworkname"
+  work_git_email    = "you@company.com"
+  work_vcs_host     = "git.company.com"
+  work_ado_org      = "mycompany"      # optional — only add if you use Azure DevOps
+```
+
+This file is never committed. When present, chezmoi deploys `~/.config/git/config-work` and wires up `[includeIf]` blocks in `~/.config/git/config` so the work identity is used automatically for any repo whose remote points at `work_vcs_host`. See the [dotfiles README](https://github.com/jeomhps/dotfiles#work-machine-setup) for details.
+
 ### Minimal `flake.nix`
 
 ```nix
