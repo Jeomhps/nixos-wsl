@@ -33,7 +33,7 @@ wsl -d NixOS
 > Use `boot` and not `switch` — the config changes the default username from `nixos` to `jeomhps`, and using `switch` can leave the new user misconfigured.
 
 ```sh
-sudo nixos-rebuild boot --flake github:jeomhps/nixos-wsl#nixos
+sudo nixos-rebuild boot --flake github:jeomhps/nixos-wsl#nixos-wsl --no-write-lock-file
 ```
 
 ### 4. Apply the new username
@@ -106,6 +106,7 @@ All options live under the `wslBase` namespace and can be overridden by downstre
 
 | Option | Type | Default | Description |
 |---|---|---|---|
+| `wslBase.hostname` | `str` | `"nixos-wsl"` | System hostname — used by chezmoi templates via `.chezmoi.hostname` |
 | `wslBase.username` | `str` | `"jeomhps"` | Primary WSL user created at boot |
 | `wslBase.neovim.enable` | `bool` | `true` | Enable the [jeomhps/neovim](https://github.com/jeomhps/neovim) config |
 | `wslBase.dotfiles.enable` | `bool` | `true` | Auto-run `chezmoi init --apply` on first boot |
@@ -123,10 +124,15 @@ The `nixosModules.default` export is the main building block. A downstream flake
 {
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    NixOS-WSL = {
+      url = "github:nix-community/NixOS-WSL/main";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
     nixos-wsl = {
       url = "github:jeomhps/nixos-wsl";
       inputs.nixpkgs.follows = "nixpkgs";
-      inputs.neovim-config.follows = "neovim-config"; # see note below
+      inputs.NixOS-WSL.follows = "NixOS-WSL";       # control NixOS-WSL pin directly
+      inputs.neovim-config.follows = "neovim-config"; # control neovim pin directly
     };
     neovim-config = {
       url = "github:jeomhps/neovim";
@@ -135,11 +141,12 @@ The `nixosModules.default` export is the main building block. A downstream flake
   };
 
   outputs = { nixpkgs, nixos-wsl, ... }: {
-    nixosConfigurations."nixos" = nixpkgs.lib.nixosSystem {
+    nixosConfigurations."work-machine" = nixpkgs.lib.nixosSystem {
       system = "x86_64-linux";
       modules = [
         {
           nix.registry.nixpkgs.flake = nixpkgs;
+          wslBase.hostname      = "work-machine";
           wslBase.username      = "youruser";
           wslBase.dotfiles.repo = "youruser/dotfiles";
           # wslBase.neovim.enable = false;  # opt out of the neovim config
@@ -152,17 +159,17 @@ The `nixosModules.default` export is the main building block. A downstream flake
 }
 ```
 
-> **`neovim-config` follows** — `nixos-wsl` pins its own `neovim-config` in its `flake.lock`.
-> By re-declaring it as a direct input and adding `inputs.neovim-config.follows = "neovim-config"`,
-> your downstream flake takes ownership of that pin and you can update neovim independently
-> without waiting for `nixos-wsl` to update first:
+> **`follows` pins** — `nixos-wsl` carries its own `flake.lock` entries for both `NixOS-WSL` and `neovim-config`.
+> By re-declaring them as direct inputs and adding the matching `follows` lines, your downstream
+> flake takes ownership of those pins and can update each one independently:
 >
 > ```sh
-> nix flake update neovim-config   # update only neovim, nothing else
+> nix flake update NixOS-WSL      # pull latest NixOS-WSL
+> nix flake update neovim-config  # pull latest neovim config
 > sudo nixos-rebuild switch --flake .
 > ```
 >
-> Without this, you would need to update `nixos-wsl`'s lock first, then update your flake — a two-step chain.
+> Without the `follows`, updating either would require bumping `nixos-wsl`'s lock first — a two-step chain.
 
 ### Corporate CA / proxy (`your-overrides.nix`)
 
