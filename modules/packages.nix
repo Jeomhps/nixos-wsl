@@ -52,6 +52,7 @@
     picocrypt-cli
     picocrypt-ng
     pinentry-tty
+    git-credential-manager
 
     # CLI utilities
     btop
