@@ -246,6 +246,8 @@ cat ~/.ssh/id_ed25519_github.pub   # → GitHub Settings / SSH keys
 cat ~/.ssh/id_ed25519_work.pub     # → your work VCS SSH keys
 ```
 
+> Don't forget to create `~/.ssh/config` to map each host to the right key — otherwise SSH will not know which identity to use for which remote.
+
 ### 9. Fix the chezmoi remote
 
 Run the helper function to switch all dotfile remotes to SSH:
