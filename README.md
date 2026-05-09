@@ -12,7 +12,21 @@ Base NixOS-WSL configuration — public and designed to be composed by downstrea
 
 ---
 
-## Fresh setup (personal machine)
+## Options (`wslBase`)
+
+All options live under the `wslBase` namespace and can be overridden by downstream flakes.
+
+| Option | Type | Default | Description |
+|---|---|---|---|
+| `wslBase.hostname` | `str` | `"nixos-wsl"` | System hostname |
+| `wslBase.username` | `str` | `"jeomhps"` | Primary WSL user created at boot |
+| `wslBase.neovim.enable` | `bool` | `true` | Enable the [jeomhps/neovim](https://github.com/jeomhps/neovim) config |
+| `wslBase.dotfiles.enable` | `bool` | `true` | Auto-run `chezmoi init --apply` on first boot |
+| `wslBase.dotfiles.repo` | `str` | `"jeomhps/dotfiles"` | GitHub `user/repo` shorthand or full git URL passed to `chezmoi init` |
+
+---
+
+## Fresh setup — personal machine
 
 ### 1. Import the NixOS-WSL tarball
 
@@ -77,17 +91,15 @@ Go to [GitHub Settings - SSH keys](https://github.com/settings/keys) and add the
 
 ### 7. Fix the chezmoi remote
 
-On first boot chezmoi is initialized over HTTPS. Switch the remote to SSH:
+On first boot chezmoi is initialized over HTTPS. Run the helper function to switch all dotfile remotes to SSH:
 
 ```sh
-git -C ~/.local/share/chezmoi remote set-url origin git@github.com:jeomhps/dotfiles.git
+fix-dotfiles-upstream
 ```
 
 ### 8. Install win32yank on the Windows host (fast clipboard)
 
-Neovim reads the clipboard through a `wsl-paste` helper. Without this step it
-falls back to `powershell.exe Get-Clipboard`, which adds ~300–700 ms of
-startup overhead on every paste.
+Neovim reads the clipboard through a `wsl-paste` helper. Without this step it falls back to `powershell.exe Get-Clipboard`, which adds ~300–700 ms of startup overhead on every paste.
 
 From a PowerShell window on the Windows host:
 
@@ -103,39 +115,11 @@ winget install equalsraf.win32yank
 
 ---
 
-## Options (`wslBase`)
+## Fresh setup — work machine
 
-All options live under the `wslBase` namespace and can be overridden by downstream flakes.
+### 1. Create the downstream flake
 
-| Option | Type | Default | Description |
-|---|---|---|---|
-| `wslBase.hostname` | `str` | `"nixos-wsl"` | System hostname — used by chezmoi templates via `.chezmoi.hostname` |
-| `wslBase.username` | `str` | `"jeomhps"` | Primary WSL user created at boot |
-| `wslBase.neovim.enable` | `bool` | `true` | Enable the [jeomhps/neovim](https://github.com/jeomhps/neovim) config |
-| `wslBase.dotfiles.enable` | `bool` | `true` | Auto-run `chezmoi init --apply` on first boot |
-| `wslBase.dotfiles.repo` | `str` | `"jeomhps/dotfiles"` | GitHub `user/repo` shorthand or full git URL passed to `chezmoi init` |
-
----
-
-## Composing from a downstream flake (e.g. work setup)
-
-The `nixosModules.default` export is the main building block. A downstream flake only needs to import it and layer its own config on top.
-
-### Checklist
-
-Before running `nixos-rebuild` for the first time on the work machine, create `~/.config/chezmoi/chezmoi.toml` **before** chezmoi runs (i.e. before the first boot after the flake switch), so the `chezmoi-init` systemd service picks it up:
-
-```toml
-[data]
-  work_git_username = "yourworkname"
-  work_git_email    = "you@company.com"
-  work_vcs_host     = "git.company.com"
-  work_ado_org      = "mycompany"      # optional — only add if you use Azure DevOps
-```
-
-This file is never committed. When present, chezmoi deploys `~/.config/git/config-work` and wires up `[includeIf]` blocks in `~/.config/git/config` so the work identity is used automatically for any repo whose remote points at `work_vcs_host`. See the [dotfiles README](https://github.com/jeomhps/dotfiles#work-machine-setup) for details.
-
-### Minimal `flake.nix`
+In your private work repo, create a `flake.nix` that imports this base module and overrides the relevant options:
 
 ```nix
 {
@@ -148,8 +132,8 @@ This file is never committed. When present, chezmoi deploys `~/.config/git/confi
     nixos-wsl = {
       url = "github:jeomhps/nixos-wsl";
       inputs.nixpkgs.follows = "nixpkgs";
-      inputs.NixOS-WSL.follows = "NixOS-WSL";       # control NixOS-WSL pin directly
-      inputs.neovim-config.follows = "neovim-config"; # control neovim pin directly
+      inputs.NixOS-WSL.follows = "NixOS-WSL";
+      inputs.neovim-config.follows = "neovim-config";
     };
     neovim-config = {
       url = "github:jeomhps/neovim";
@@ -185,10 +169,104 @@ This file is never committed. When present, chezmoi deploys `~/.config/git/confi
 > nix flake update neovim-config  # pull latest neovim config
 > sudo nixos-rebuild switch --flake .
 > ```
->
-> Without the `follows`, updating either would require bumping `nixos-wsl`'s lock first — a two-step chain.
 
-### Corporate CA / proxy (`your-overrides.nix`)
+See [Corporate CA / proxy](#corporate-ca--proxy) if you are behind an SSL-inspecting proxy.
+
+### 2. Create the chezmoi local config
+
+Before chezmoi runs on first boot, the local config must already exist on the machine. Create it **before** applying the flake:
+
+```sh
+mkdir -p ~/.config/chezmoi
+cat > ~/.config/chezmoi/chezmoi.toml <<'EOF'
+[data]
+  work_git_username = "yourworkname"
+  work_git_email    = "you@company.com"
+  work_vcs_host     = "git.company.com"
+  work_ado_org      = "mycompany"      # optional — only add if you use Azure DevOps
+EOF
+```
+
+This file is never committed. When present, chezmoi deploys `~/.config/git/config-work` and wires up `[includeIf]` blocks in `~/.config/git/config` so the work identity is used automatically for any repo whose remote matches `work_vcs_host` (and Azure DevOps if `work_ado_org` is set).
+
+### 3. Import the NixOS-WSL tarball
+
+```powershell
+wsl --import NixOS E:\WSL\NixOS D:\Downloads\nixos.wsl
+```
+
+### 4. Boot into the new distro
+
+```powershell
+wsl -d NixOS
+```
+
+### 5. Apply the work flake
+
+> Use `boot` and not `switch` — same reason as the personal setup.
+
+```sh
+sudo nixos-rebuild boot --flake github:your-org/your-work-flake#work-machine --no-write-lock-file
+```
+
+### 6. Apply the new username
+
+Exit the WSL shell, then from PowerShell:
+
+```powershell
+wsl -t NixOS
+wsl -d NixOS --user root exit
+wsl -t NixOS
+wsl -d NixOS
+```
+
+> chezmoi dotfiles will initialize automatically on this first boot. The chezmoi local config created in step 2 will be picked up and the work git identity deployed.
+
+### 7. Enable systemd user session (linger)
+
+```sh
+sudo loginctl enable-linger youruser
+```
+
+> This may or may not be needed depending on the environment — skip and revisit if you see `Failed to start the systemd user session` warnings on WSL startup.
+
+### 8. Generate SSH keys
+
+Generate keys for GitHub and your work VCS host:
+
+```sh
+ssh-keygen -t ed25519 -C "170039650+Jeomhps@users.noreply.github.com" -f ~/.ssh/id_ed25519_github
+ssh-keygen -t ed25519 -C "you@company.com" -f ~/.ssh/id_ed25519_work
+```
+
+Add each public key to the respective platform:
+
+```sh
+cat ~/.ssh/id_ed25519_github.pub   # → GitHub Settings / SSH keys
+cat ~/.ssh/id_ed25519_work.pub     # → your work VCS SSH keys
+```
+
+### 9. Fix the chezmoi remote
+
+Run the helper function to switch all dotfile remotes to SSH:
+
+```sh
+fix-dotfiles-upstream
+```
+
+### 10. Install win32yank on the Windows host (fast clipboard)
+
+```powershell
+# via Scoop
+scoop install win32yank
+
+# or via WinGet
+winget install equalsraf.win32yank
+```
+
+---
+
+## Corporate CA / proxy
 
 When behind a proxy that does SSL inspection, use a lean `runCommand` bundle instead of overriding `cacert` (avoids a full mass rebuild):
 
