@@ -56,7 +56,17 @@ wsl -d NixOS
 
 > chezmoi dotfiles will initialize automatically on this first boot as the new user.
 
-### 5. Generate an SSH key and add it to GitHub
+### 5. Enable systemd user session (linger)
+
+Run this once to prevent the `Failed to start the systemd user session` warning on every WSL startup:
+
+```sh
+sudo loginctl enable-linger jeomhps
+```
+
+> This writes a marker file to `/var/lib/systemd/linger/` and persists across reboots. It cannot be set via `nixos-rebuild` in WSL due to a missing D-Bus connection during activation.
+
+### 6. Generate an SSH key and add it to GitHub
 
 ```sh
 ssh-keygen -t ed25519 -C "170039650+Jeomhps@users.noreply.github.com" -f ~/.ssh/id_ed25519_github
@@ -65,7 +75,7 @@ cat ~/.ssh/id_ed25519_github.pub
 
 Go to [GitHub Settings - SSH keys](https://github.com/settings/keys) and add the key.
 
-### 6. Fix the chezmoi remote
+### 7. Fix the chezmoi remote
 
 On first boot chezmoi is initialized over HTTPS. Switch the remote to SSH and set up git identity:
 
@@ -80,7 +90,7 @@ git config --global user.email "170039650+Jeomhps@users.noreply.github.com"
 
 After that everything should be good.
 
-### 7. Install win32yank on the Windows host (fast clipboard)
+### 8. Install win32yank on the Windows host (fast clipboard)
 
 Neovim reads the clipboard through a `wsl-paste` helper. Without this step it
 falls back to `powershell.exe Get-Clipboard`, which adds ~300–700 ms of
