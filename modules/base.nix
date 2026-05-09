@@ -1,6 +1,12 @@
 { lib, pkgs, config, ... }:
 {
   options.wslBase = {
+    hostname = lib.mkOption {
+      type = lib.types.str;
+      default = "nixos-wsl";
+      description = "System hostname. Override in downstream flakes (e.g. work machine).";
+    };
+
     username = lib.mkOption {
       type = lib.types.str;
       default = "jeomhps";
@@ -24,6 +30,8 @@
   config = lib.mkMerge [
     {
       wrappers.neovim.enable = config.wslBase.neovim.enable;
+
+      networking.hostName = config.wslBase.hostname;
 
       nix.settings = {
         experimental-features = [ "nix-command" "flakes" ];
