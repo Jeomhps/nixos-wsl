@@ -202,6 +202,39 @@ Place your corporate CA certificate (PEM format) at `certs/corporate-ca.crt` nex
 
 ---
 
+## Known issues
+
+### Hostname rename — aliases break on first rebuild
+
+The shell aliases (`upgrade`, `update`, etc.) use `.#` as the flake attribute, which Nix resolves to the **current system hostname**. If you rename `wslBase.hostname` in your flake (or set it for the first time on an existing machine that still has the old hostname), the rebuild will fail because the old hostname no longer matches any `nixosConfigurations` entry:
+
+```
+error: flake does not provide attribute 'nixosConfigurations."old-name"'
+```
+
+Fix: run the rebuild **once** with the new name spelled out explicitly:
+
+```sh
+sudo nixos-rebuild switch --flake .#new-hostname
+```
+
+After that the system hostname matches the flake attribute and `.#` resolves correctly again.
+
+### Hostname change requires a WSL distro restart to take effect
+
+`networking.hostName` is forwarded to `/etc/wsl.conf` under `[network] hostname`. WSL only reads `wsl.conf` at distro startup — a `nixos-rebuild switch` alone is not enough.
+
+After rebuilding, restart the distro from PowerShell on the Windows host:
+
+```powershell
+wsl -t NixOS   # terminate the running distro
+wsl -d NixOS   # start it again — wsl.conf is re-read here
+```
+
+You can confirm the change took effect with `hostname` inside WSL.
+
+---
+
 ## Updating
 
 ```sh
