@@ -80,10 +80,7 @@
 
       users = {
         defaultUserShell = pkgs.zsh;
-        users.${config.wslBase.username} = {
-          extraGroups = [ "docker" ];
-          linger = true;
-        };
+        users.${config.wslBase.username}.extraGroups = [ "docker" ];
       };
 
       system.stateVersion = "25.05";
