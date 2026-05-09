@@ -77,18 +77,11 @@ Go to [GitHub Settings - SSH keys](https://github.com/settings/keys) and add the
 
 ### 7. Fix the chezmoi remote
 
-On first boot chezmoi is initialized over HTTPS. Switch the remote to SSH and set up git identity:
+On first boot chezmoi is initialized over HTTPS. Switch the remote to SSH:
 
 ```sh
-# Switch remote to SSH
 git -C ~/.local/share/chezmoi remote set-url origin git@github.com:jeomhps/dotfiles.git
-
-# Set git identity (if not already in your dotfiles)
-git config --global user.name "jeomhps"
-git config --global user.email "170039650+Jeomhps@users.noreply.github.com"
 ```
-
-After that everything should be good.
 
 ### 8. Install win32yank on the Windows host (fast clipboard)
 
