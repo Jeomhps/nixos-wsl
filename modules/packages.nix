@@ -61,6 +61,8 @@
     jq
     openssl
     ripgrep
+    xh
+    tv
 
     # network
     bind

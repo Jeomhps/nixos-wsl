@@ -48,11 +48,11 @@
         "wrappers": "wrappers"
       },
       "locked": {
-        "lastModified": 1778622490,
-        "narHash": "sha256-mT8yAoEM2AlUW28sSa8pUH8mjK4EX3/mppN50mRaj2I=",
+        "lastModified": 1778759626,
+        "narHash": "sha256-4AZJ4paKrgg9qnrXnaB7MHrpu8SWqT61YwHZRWG54p8=",
         "owner": "jeomhps",
         "repo": "neovim",
-        "rev": "6b8dc9197988e43997819a743846253debd8ce94",
+        "rev": "94c6f575ae92b7f70605e18050bbf514885cd0cc",
         "type": "github"
       },
       "original": {
