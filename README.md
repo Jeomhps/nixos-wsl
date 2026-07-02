@@ -270,7 +270,7 @@ winget install equalsraf.win32yank
 
 ## Corporate CA / proxy
 
-When behind a proxy that does SSL inspection, use a lean `runCommand` bundle instead of overriding `cacert` (avoids a full mass rebuild):
+When behind a proxy that does SSL inspection, use a lean `runCommand` bundle instead of overriding `cacert` (avoids a full mass rebuild). The `nixpkgs.overlays` section is essential for tools like `fetchgit`, `fetchhg`, `cargo`, and `python requests` to work correctly:
 
 ```nix
 { pkgs, ... }:
@@ -281,15 +281,27 @@ let
   '';
 in
 {
+  nixpkgs.overlays = [
+    (_final: prev:
+      let
+        corporateCacert = prev.cacert.override {
+          extraCertificateFiles = [ ./certs/corporate-ca.crt ];
+        };
+      in
+      {
+        fetchgit = prev.fetchgit.override { cacert = corporateCacert; };
+        fetchhg = prev.fetchhg.override { cacert = corporateCacert; };
+      })
+  ];
+
   nix.settings.ssl-cert-file = "${caBundle}";
 
   systemd.services.nix-daemon.environment = {
     https_proxy       = "http://proxy.corp.internal:9400";
     http_proxy        = "http://proxy.corp.internal:9400";
     NIX_SSL_CERT_FILE = "${caBundle}";
+    GIT_SSL_CAINFO    = "${caBundle}";
   };
-
-  environment.variables.https_proxy = "http://proxy.corp.internal:9400";
 
   security.pki.certificateFiles = [ ./certs/corporate-ca.crt ];
 }
