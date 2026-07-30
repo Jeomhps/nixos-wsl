@@ -32,13 +32,13 @@
 
     # languages / runtimes
     bun
-    cargo
-    cargo-binstall
+    #cargo
+    #cargo-binstall
     gcc
     go
     lua
     python3
-    rustc
+    #rustc
     uv
 
     # devops / containers / k8s
