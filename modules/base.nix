@@ -80,8 +80,16 @@
 
       users = {
         defaultUserShell = pkgs.zsh;
-        users.${config.wslBase.username}.extraGroups = [ "docker" ];
+        users.${config.wslBase.username}.extraGroups = [ "docker" "plugdev" ];
       };
+
+      services.pcscd.enable = true;
+
+      users.groups.plugdev = {};
+
+      environment.etc."udev/rules.d/99-yubikey.rules".text = ''
+        SUBSYSTEM=="usb", ATTR{idVendor}=="1050", GROUP="plugdev", MODE="0660"
+      '';
 
       system.stateVersion = "25.05";
     }

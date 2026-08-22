@@ -1,5 +1,11 @@
-{ pkgs, ... }:
+{ lib, pkgs, ... }:
 {
+  nixpkgs.config.allowUnfreePredicate =
+    pkg:
+    builtins.elem (lib.getName pkg) [
+      "claude-code"
+    ];
+
   environment.systemPackages = with pkgs; [
     # editors
     helix
@@ -63,6 +69,7 @@
     ripgrep
     xh
     tv
+    yubikey-manager
 
     # network
     bind
@@ -70,5 +77,6 @@
 
     # documentation
     tealdeer
+    claude-code
   ];
 }

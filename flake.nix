@@ -8,7 +8,7 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
     neovim-config = {
-      url = "github:jeomhps/neovim";
+      url = "github:jeomhps/neovim/typst";
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };
