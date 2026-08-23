@@ -51,6 +51,10 @@
     act
     lazydocker
     yq-go
+    kubectl
+    fluxcd
+    flux9s
+    k9s
 
     # security
     gnupg
@@ -58,6 +62,7 @@
     picocrypt-cli
     picocrypt-ng
     pinentry-tty
+    x11_ssh_askpass
 
     # CLI utilities
     btop
@@ -70,6 +75,7 @@
     xh
     tv
     yubikey-manager
+    opentofu
 
     # network
     bind
