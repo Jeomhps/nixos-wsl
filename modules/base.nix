@@ -48,6 +48,14 @@
 
       networking.firewall.enable = false;
 
+      # ssh-keygen -Y sign (and any other prompt where stdin isn't a real tty,
+      # e.g. it's occupied by piped data) falls back to $SSH_ASKPASS. Without
+      # a real binary there, openssh tries to exec its compiled-in default
+      # path, which doesn't exist under Nix, and the PIN entry fails silently
+      # as "incorrect passphrase" with no visible prompt.
+      # NixOS's programs.bash module sets this to "" unconditionally, hence mkForce.
+      environment.variables.SSH_ASKPASS = lib.mkForce "${pkgs.x11_ssh_askpass}/libexec/x11-ssh-askpass";
+
       # Allow unpatched dynamic binaries (e.g. Zed, VS Code) to run on NixOS.
       programs.nix-ld.enable = true;
 
